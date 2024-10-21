@@ -19,6 +19,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { TimePipePipe } from '../../pipe/time-pipe.pipe';
 
 @Component({
   selector: 'app-layout',
@@ -38,6 +39,7 @@ import {
     FormsModule,
     ReactiveFormsModule,
     BadgeModule,
+    TimePipePipe
   ],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
@@ -50,6 +52,10 @@ export class LayoutComponent implements OnInit {
   deleteConfirmationVisibles = signal(false);
   selectedTempListeId = signal<string | null>(null);
 
+  updateDialogVisible = signal(false);
+  selectedProductForUpdate = signal<Product | null>(null);
+
+  
   
   todoItems: any;
   closeDialog() {
@@ -57,6 +63,15 @@ export class LayoutComponent implements OnInit {
   }
   productService = inject(ProductService);
   fb = inject(FormBuilder);
+
+  updateForm = this.fb.group({
+    title: ['', Validators.required],
+    message: ['', Validators.required],
+    date: [null as Date | null, Validators.required],
+    time: [null as Date | null, Validators.required ],
+    priority: ['', Validators.required],
+    category: ['', Validators.required],
+  });
 
   productDialogVisible = signal(false);
   selectedProduct = signal<Product | null>(null);
@@ -323,8 +338,75 @@ export class LayoutComponent implements OnInit {
     }
   }
 
+  showUpdateDialog(product: Product) {
+    this.selectedProductForUpdate.set(product);
+    this.updateForm.patchValue({
+      title: product.title,
+      message: product.message,
+      date: new Date(product.date),
+      time: new Date(`1970-01-01T${product.time}`),
+      priority: product.priority,
+      category: product.category,
+    });
+    this.updateDialogVisible.set(true);
+  }
 
 
+  onUpdate() {
+  //   if (this.updateForm.valid && this.selectedProductForUpdate()) {
+  //     const updatedProduct: Product = {
+  //       ...this.selectedProductForUpdate()!,
+  //       ...this.updateForm.value,
+  //       date: this.updateForm.value.date ? new Date(this.updateForm.value.date).toLocaleDateString() : '',
+  //       time: this.updateForm.value.time ? String(this.updateForm.value.time) : '',
+  //     };
+
+  //     // Ürünü güncelleyin (todoProducts ve completedProducts listelerinde)
+  //     this.updateProductInLists(updatedProduct);
+
+  //     // LocalStorage'ı güncelleyin
+  //     this.updateLocalStorage(updatedProduct);
+
+  //     this.updateDialogVisible.set(false);
+  //     this.selectedProductForUpdate.set(null);
+  //   }
+  // }
+  if (this.updateForm.valid && this.selectedProductForUpdate()) {
+    const formValue = this.updateForm.value;
+    const updatedProduct: Product = {
+      ...this.selectedProductForUpdate()!,
+      title: formValue.title || '',
+      message: formValue.message || '',
+      date: formValue.date ? new Date(formValue.date).toLocaleDateString() : '',
+      time: formValue.time ? new Date(formValue.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+      priority: formValue.priority || '',
+      category: formValue.category || '',
+    };
+
+    this.updateProductInLists(updatedProduct);
+    this.updateLocalStorage(updatedProduct);
+
+    this.updateDialogVisible.set(false);
+    this.selectedProductForUpdate.set(null);
+  }
+}
+
+updateProductInLists(updatedProduct: Product) {
+  const updateList = (list: readonly Product[]): Product[] =>
+    list.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+
+  this.todoProducts.update(products => updateList(products));
+  this.completedProducts.update(products => updateList(products));
+  this.tempList.update(products => updateList(products));
+} 
+
+updateLocalStorage(updatedProduct: Product) {
+  const storedProducts = JSON.parse(localStorage.getItem('products') || '[]');
+  const updatedStoredProducts = storedProducts.map((p: Product) =>
+    p.id === updatedProduct.id ? updatedProduct : p
+  );
+  localStorage.setItem('products', JSON.stringify(updatedStoredProducts));
+}
   // Ürünü görüntüleme
   viewProduct(product: Product) {
     this.selectedProduct.set(product);

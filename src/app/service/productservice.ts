@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { TimePipePipe } from '../pipe/time-pipe.pipe';
 
 export interface Product {
   id: string; // 'string' yerine 'string | undefined'
   title: string;
   message: string;
   date: string;
-  time: string;
+  time: string ;
   priority: string;
   category: string;
   completed: boolean; // Yeni alan
@@ -23,9 +24,17 @@ export class ProductService {
   completedProducts$ = this.completedProductsSubject.asObservable();
 
   addProduct(product: Product): void {
-    product.id = Date.now().toString(); // Generate a unique ID
+    product.id = Date.now().toString();
     const currentTodoProducts = this.todoProductsSubject.value;
     this.todoProductsSubject.next([...currentTodoProducts, product]);
+  }
+
+  updateProduct(updatedProduct: Product): void {
+    const currentTodoProducts = this.todoProductsSubject.value;
+    const updatedProducts = currentTodoProducts.map(product => 
+      product.id === updatedProduct.id ? updatedProduct : product
+    );
+    this.todoProductsSubject.next(updatedProducts);
   }
 
   moveToCompleted(product: Product): void {
