@@ -39,13 +39,12 @@ import { TimePipePipe } from '../../pipe/time-pipe.pipe';
     FormsModule,
     ReactiveFormsModule,
     BadgeModule,
-    TimePipePipe
+    TimePipePipe,
   ],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
 })
 export class LayoutComponent implements OnInit {
-
   deleteConfirmationVisible = signal(false);
   selectedProductId = signal<string | null>(null);
 
@@ -55,8 +54,6 @@ export class LayoutComponent implements OnInit {
   updateDialogVisible = signal(false);
   selectedProductForUpdate = signal<Product | null>(null);
 
-  
-  
   todoItems: any;
   closeDialog() {
     throw new Error('Method not implemented.');
@@ -68,7 +65,7 @@ export class LayoutComponent implements OnInit {
     title: ['', Validators.required],
     message: ['', Validators.required],
     date: [null as Date | null, Validators.required],
-    time: [null as Date | null, Validators.required ],
+    time: [null as Date | null, Validators.required],
     priority: ['', Validators.required],
     category: ['', Validators.required],
   });
@@ -111,7 +108,7 @@ export class LayoutComponent implements OnInit {
     category: ['', Validators.required],
   });
 
-  constructor() { }
+  constructor() {}
 
   updateTodoCount() {
     this.todoCount.set(this.tempList().length);
@@ -131,7 +128,6 @@ export class LayoutComponent implements OnInit {
 
     this.todoProducts.set(todoProducts);
     this.completedProducts.set(completedProducts);
-
     this.tempList.set([...this.todoProducts()]);
 
     // Menü öğeleri
@@ -150,7 +146,7 @@ export class LayoutComponent implements OnInit {
     this.draggedProduct.set(product);
   }
 
-  // Ürün bırakıldığında
+  // Sürüklenen Ürünün  bırakıldığında yapılacak İşlemler
   drop() {
     const dragged = this.draggedProduct();
 
@@ -165,11 +161,12 @@ export class LayoutComponent implements OnInit {
         (product) => product.id !== dragged.id
       );
 
-      const updateTempList = this.tempList().filter((Product) => Product.id !== dragged.id);
-
+      const updateTempList = this.tempList().filter(
+        (Product) => Product.id !== dragged.id
+      );
 
       this.todoProducts.set(updatedTodoProducts);
-      this.tempList.set(updateTempList)
+      this.tempList.set(updateTempList);
 
       // Tamamlanan ürünleri yönetmek için bir dizi oluşturun
       const completedProducts = this.completedProducts() || [];
@@ -184,10 +181,9 @@ export class LayoutComponent implements OnInit {
         product.id === updatedProduct.id ? updatedProduct : product
       );
       localStorage.setItem('products', JSON.stringify(updatedStoredProducts));
-      this.updateTodoCount()
+      this.updateTodoCount();
       // Sürüklenen ürünü temizle
       this.draggedProduct.set(null);
-
     }
   }
 
@@ -210,31 +206,18 @@ export class LayoutComponent implements OnInit {
     }
   }
 
-  getPriorityClass(priority: string): string {
-    switch (priority) {
-      case 'DÜŞÜK':
-        return 'bg-blue-100';
-      case 'ORTA':
-        return 'bg-orange-100';
-      case 'YÜKSEK':
-        return 'bg-red-100';
-      default:
-        return '';
-    }
-  }
-
   // Yeni hatırlatıcı ekleme formunu gösterme
   reminderAdd() {
     this.visible.set(true);
     this.registerAddForm.reset();
   }
 
-  // Form gönderimi
+  // Yeni Eklenen Formu Listeye Gönderme
   onSubmit() {
     if (this.registerAddForm.valid) {
       const formValue = this.registerAddForm.value;
       const newProduct: Product = {
-        id: Date.now().toString(), // Benzersiz ID (timestamp)
+        id: Date.now().toString(), // ID Benzersiz Olması İçin Date'i Milisaniyeye Çeviriyorum  gün/ay/yıl saat.dakika.saniye Cinsinden
         title: formValue.title || '',
         message: formValue.message || '',
         date: formValue.date
@@ -265,23 +248,28 @@ export class LayoutComponent implements OnInit {
     this.updateTodoCount();
   }
 
+  //Yapılacaklar Listesinden sil dialog açılma komutu
   confirmDelete(productId: string) {
     this.selectedProductId.set(productId);
     this.deleteConfirmationVisible.set(true);
   }
+
+  //Bildirim Pannel  sil dialog penceresinin açılma komutu
   confirmDeletes(TempListeId: string) {
     this.selectedTempListeId.set(TempListeId);
     this.deleteConfirmationVisibles.set(true);
   }
-  
+
+  //Bildirim Listesinden veri silinmesi komutu
   deleteProducte() {
     if (this.selectedTempListeId()) {
       this.deleteProducts(this.selectedTempListeId()!);
-      this.deleteConfirmationVisible.set(false);
+      this.deleteConfirmationVisibles.set(false);
       this.selectedTempListeId.set(null);
     }
   }
-  
+
+  //Yapılacaklar Listesinden Veri Silme Komutu
   deleteProductes() {
     if (this.selectedProductId()) {
       this.deleteProduct(this.selectedProductId()!);
@@ -290,8 +278,8 @@ export class LayoutComponent implements OnInit {
     }
   }
 
+  //TempList'den Yaani Tamamlananlar listesinden Veri silme
   deleteProducts(TempListeId: string) {
-    // Mevcut silme işlemi kodu
     const updateTempList = this.tempList().filter(
       (TempListe) => TempListe.id !== TempListeId
     );
@@ -302,8 +290,7 @@ export class LayoutComponent implements OnInit {
     }
   }
 
-
-  // Ürün silme
+  //ProductList içerisinden Yaani Yapılacaklar Listesinden Veri Silme
   deleteProduct(productId: string) {
     // `todoProducts` listesinden ürünü sil
     const updatedTodoProducts = this.todoProducts().filter(
@@ -319,7 +306,6 @@ export class LayoutComponent implements OnInit {
     const updateTempList = this.tempList().filter(
       (product) => product.id !== productId
     );
-
 
     this.tempList.set(updateTempList);
     this.completedProducts.set(updatedCompletedProducts);
@@ -338,75 +324,79 @@ export class LayoutComponent implements OnInit {
     }
   }
 
+  //Güncellecek Veriyi Dialog Penceresinde Açma İşlemi
   showUpdateDialog(product: Product) {
     this.selectedProductForUpdate.set(product);
+
+    // Parse the full date-time string into a Date object
+    const fullDateTime = new Date(product.time);
+    
+    // Extract hours and minutes from the Date object
+    const timeAsDate = new Date(); // Create a new Date for the current day
+    timeAsDate.setHours(fullDateTime.getHours()); // Set hours from the product time
+    timeAsDate.setMinutes(fullDateTime.getMinutes()); // Set minutes from the product time
+    timeAsDate.setSeconds(0); // Optional: Reset seconds if needed
+
     this.updateForm.patchValue({
       title: product.title,
       message: product.message,
-      date: new Date(product.date),
-      time: new Date(`1970-01-01T${product.time}`),
+      date: new Date(product.date), // Assuming product.date is valid
+      time: timeAsDate, // Set the extracted time part as a Date object
       priority: product.priority,
       category: product.category,
     });
+
     this.updateDialogVisible.set(true);
-  }
+}
 
 
+
+  //Güncelleme işlemleri
   onUpdate() {
-  //   if (this.updateForm.valid && this.selectedProductForUpdate()) {
-  //     const updatedProduct: Product = {
-  //       ...this.selectedProductForUpdate()!,
-  //       ...this.updateForm.value,
-  //       date: this.updateForm.value.date ? new Date(this.updateForm.value.date).toLocaleDateString() : '',
-  //       time: this.updateForm.value.time ? String(this.updateForm.value.time) : '',
-  //     };
+    if (this.updateForm.valid && this.selectedProductForUpdate()) {
+      const formValue = this.updateForm.value;
+      const updatedProduct: Product = {
+        ...this.selectedProductForUpdate()!,
+        title: formValue.title || '',
+        message: formValue.message || '',
+        date: formValue.date
+          ? new Date(formValue.date).toLocaleDateString()
+          : '',
+          time: formValue.time ? String(formValue.time) : ''
+,      
+        priority: formValue.priority || '',
+        category: formValue.category || '',
+      };
 
-  //     // Ürünü güncelleyin (todoProducts ve completedProducts listelerinde)
-  //     this.updateProductInLists(updatedProduct);
 
-  //     // LocalStorage'ı güncelleyin
-  //     this.updateLocalStorage(updatedProduct);
 
-  //     this.updateDialogVisible.set(false);
-  //     this.selectedProductForUpdate.set(null);
-  //   }
-  // }
-  if (this.updateForm.valid && this.selectedProductForUpdate()) {
-    const formValue = this.updateForm.value;
-    const updatedProduct: Product = {
-      ...this.selectedProductForUpdate()!,
-      title: formValue.title || '',
-      message: formValue.message || '',
-      date: formValue.date ? new Date(formValue.date).toLocaleDateString() : '',
-      time: formValue.time ? new Date(formValue.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-      priority: formValue.priority || '',
-      category: formValue.category || '',
-    };
 
-    this.updateProductInLists(updatedProduct);
-    this.updateLocalStorage(updatedProduct);
+      this.updateProductInLists(updatedProduct);
+      this.updateLocalStorage(updatedProduct);
 
-    this.updateDialogVisible.set(false);
-    this.selectedProductForUpdate.set(null);
+      this.updateDialogVisible.set(false);
+      this.selectedProductForUpdate.set(null);
+    }
   }
-}
 
-updateProductInLists(updatedProduct: Product) {
-  const updateList = (list: readonly Product[]): Product[] =>
-    list.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+  // ProducList içerisinde Listeyi Güncelleme
+  updateProductInLists(updatedProduct: Product) {
+    const updateList = (list: readonly Product[]): Product[] =>
+      list.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
 
-  this.todoProducts.update(products => updateList(products));
-  this.completedProducts.update(products => updateList(products));
-  this.tempList.update(products => updateList(products));
-} 
+    this.todoProducts.update((products) => updateList(products));
+    this.completedProducts.update((products) => updateList(products));
+    this.tempList.update((products) => updateList(products));
+  }
 
-updateLocalStorage(updatedProduct: Product) {
-  const storedProducts = JSON.parse(localStorage.getItem('products') || '[]');
-  const updatedStoredProducts = storedProducts.map((p: Product) =>
-    p.id === updatedProduct.id ? updatedProduct : p
-  );
-  localStorage.setItem('products', JSON.stringify(updatedStoredProducts));
-}
+  //GLocalStorage içerisindeki listeyi Güncelleme
+  updateLocalStorage(updatedProduct: Product) {
+    const storedProducts = JSON.parse(localStorage.getItem('products') || '[]');
+    const updatedStoredProducts = storedProducts.map((p: Product) =>
+      p.id === updatedProduct.id ? updatedProduct : p
+    );
+    localStorage.setItem('products', JSON.stringify(updatedStoredProducts));
+  }
   // Ürünü görüntüleme
   viewProduct(product: Product) {
     this.selectedProduct.set(product);
