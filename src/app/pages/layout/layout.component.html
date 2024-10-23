@@ -1,35 +1,68 @@
 <div class="bg-gradient-to-r from-purple-500 to-indigo-600 min-h-screen p-8">
     <div class="max-w-8xl mx-auto mt-10">
+        <!-- Main Container -->
         <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
-            <div class="flex justify-between items-center mb-6">
+            <!-- Header Section with Actions -->
+            <div class="flex justify-between items-center gap-4 mb-4">
+                <!-- Add Reminder Button -->
                 <button pButton pRipple label="Yeni Hatırlatıcı Ekle" icon="pi pi-plus"
                     class="p-button-success hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105"
-                    (click)="reminderAdd()"></button>
+                    (click)="reminderAdd()">
+                </button>
+
+                <!-- Filter Section -->
+                <div class="flex-1 flex items-center">
+                    <span class="p-input-icon-left w-full max-w-md">
+                        <input pInputText type="text" [(ngModel)]="searchValue" (input)="onGlobalFilter(dt1, $event)"
+                            placeholder="Ara..." class="w-full p-2" />
+
+                    </span>
+                </div>
+
+                <p-button label="Temizle" icon="pi pi-filter-slash" severity="secondary" (onClick)="clear(dt1)">
+                </p-button>
+                <!-- Notification Section -->
                 <div class="button-container">
                     <p-badge [value]="todoCount().toString()" [ngClass]="{'blink-button': todoCount() > 0}"
-                        class="badge-pos"></p-badge>
+                        class="badge-pos">
+                    </p-badge>
+
                     <p-button icon="pi pi-bell" [rounded]="true" severity="warning" (onClick)="showTodoDialog()"
-                        [ngClass]="{'blink-button': todoCount() > 0}" class="blink-button"></p-button>
+                        [ngClass]="{'blink-button': todoCount() > 0}" class="blink-button">
+                    </p-button>
+
+                    <!-- Todo List Dialog -->
                     <p-dialog header="Yapılacaklar Listesi" [(visible)]="todoDialogVisible" [style]="{width: '50vw'}">
-                        <ul class="list-none p-0 m-0 ">
+                        <ul class="list-none p-0 m-0">
                             @for (item of tempList(); track $index) {
                             <li class="flex align-items-center p-2 border-bottom-1 surface-border mt-4 bg-slate-50">
+                                <!-- Todo Item Content -->
                                 <div class="flex-grow-1 w-full">
-                                    <h3>{{item.title}}</h3>
-                                    <p>{{item.message}}</p>
-                                    <small>Hatırlatıcı Tarihi: {{item.date}}</small>
+                                    <h3 class="text-lg font-semibold">{{item.title}}</h3>
+                                    <p class="text-gray-600">{{item.message}}</p>
+                                    <small class="text-gray-500">Hatırlatıcı Tarihi: {{item.date}}</small>
                                 </div>
+
+                                <!-- Delete Button -->
                                 <p-button icon="pi pi-times" [rounded]="true" severity="danger"
-                                    (onClick)="confirmDeletes(item.id)" class="mt-8"></p-button>
+                                    (onClick)="confirmDeletes(item.id)" class="mt-8">
+                                </p-button>
+
+                                <!-- Delete Confirmation Dialog -->
                                 <p-dialog header="Silme Onayı" [visible]="deleteConfirmationVisibles()"
-                                    (visibleChange)="deleteConfirmationVisibles.set($event)" [modal]="true"
+                                    (visibleChange)="deleteConfirmationVisibles.set($event)" [modal]="false"
                                     [style]="{width: '350px'}">
-                                    <p>Bu Bildirimi silmek istediğinize emin misiniz?</p>
+                                    <p class="mb-4">Bu Bildirimi silmek istediğinize emin misiniz?</p>
                                     <ng-template pTemplate="footer">
-                                        <p-button icon="pi pi-times" (onClick)="deleteConfirmationVisibles.set(false)"
-                                            label="Hayır" styleClass="p-button-text"></p-button>
-                                        <p-button icon="pi pi-check" (onClick)="deleteProducte()" label="Evet"
-                                            styleClass="p-button-text "></p-button>
+                                        <div class="flex justify-end gap-2">
+                                            <p-button icon="pi pi-times"
+                                                (onClick)="deleteConfirmationVisibles.set(false)" label="Hayır"
+                                                styleClass="p-button-text">
+                                            </p-button>
+                                            <p-button icon="pi pi-check" (onClick)="deleteProducte()" label="Evet"
+                                                styleClass="p-button-text">
+                                            </p-button>
+                                        </div>
                                     </ng-template>
                                 </p-dialog>
                             </li>
@@ -37,24 +70,27 @@
                         </ul>
                     </p-dialog>
                 </div>
-                <div class="flex space-x-4">
-                    <button pButton pRipple label="Sırala" icon="pi pi-sort-alt"
-                        class="p-button-secondary hover:bg-gray-600 transition duration-300"></button>
-                </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
                 <div class="bg-gray-50 rounded-lg shadow-md overflow-hidden">
                     <h2 class="text-center text-xl font-bold text-white bg-red-600 py-3">YAPILACAKLAR</h2>
                     <div class="p-4" pDroppable="products">
-                        <p-table [value]="todoProducts()" [tableStyle]="{'min-width': '100%'}"
+                        <p-table #dt1 [value]="todoProducts()" [tableStyle]="{'min-width': '100%'}"
+                            [globalFilterFields]="['title', 'date', 'priority', 'category']"
                             styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
                             <ng-template pTemplate="header">
                                 <tr class="bg-gray-200">
-                                    <th class="text-left p-3">Başlık</th>
-                                    <th class="text-left p-3">Tarih</th>
+                                    <th pSortableColumn="title" class="text-left p-3 w-40">Başlık
+                                        <p-sortIcon field="title" />
+                                    </th>
+                                    <th pSortableColumn="date" class="text-left p-3">Tarih
+                                        <p-sortIcon field="date" />
+                                    </th>
                                     <th class="text-left p-3">Saat</th>
-                                    <th class="text-left p-3">Öncelik</th>
+                                    <th pSortableColumn="priority" class="text-left p-3">Öncelik
+                                        <p-sortIcon field="priority" />
+
+                                    </th>
                                     <th class="text-left p-3">Kategori</th>
                                     <th class="text-left p-3">İşlem</th>
                                     <th class="text-left p-3">Detay</th>
@@ -79,7 +115,7 @@
                                             (onClick)="confirmDelete(product.id)"></p-button>
 
                                         <p-dialog header="Silme Onayı" [visible]="deleteConfirmationVisible()"
-                                            (visibleChange)="deleteConfirmationVisible.set($event)" [modal]="true"
+                                            (visibleChange)="deleteConfirmationVisible.set($event)" [modal]="false"
                                             [style]="{width: '350px'}">
                                             <p>Bu Bildirimi silmek istediğinize emin misiniz?</p>
                                             <ng-template pTemplate="footer">
@@ -101,7 +137,6 @@
                                             class="p-button-rounded p-button-info p-button-text ml-4"
                                             (click)="showUpdateDialog(product)"></button>
                                     </td>
-
                                 </tr>
                             </ng-template>
                         </p-table>
@@ -110,14 +145,22 @@
                 <div class="bg-gray-50 rounded-lg shadow-md overflow-hidden ">
                     <h2 class="text-center text-xl font-bold text-white bg-green-600 py-3">TAMAMLANANLAR</h2>
                     <div class="p-4" pDroppable="products" (onDrop)="drop()">
-                        <p-table [value]="completedProducts()" [tableStyle]="{'min-width': '100%'}"
+                        <p-table #dt1 [value]="completedProducts()" [tableStyle]="{'min-width': '100%'}"
+                            [globalFilterFields]="['title', 'date', 'priority', 'category']"
                             styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
                             <ng-template pTemplate="header">
                                 <tr class="bg-gray-200">
-                                    <th class="text-left p-3">Başlık</th>
-                                    <th class="text-left p-3">Tarih</th>
+                                    <th pSortableColumn="title" class="text-left p-3 w-40">Başlık
+                                        <p-sortIcon field="title" />
+                                    </th>
+                                    <th pSortableColumn="date" class="text-left p-3">Tarih
+                                        <p-sortIcon field="date" />
+                                    </th>
                                     <th class="text-left p-3">Saat</th>
-                                    <th class="text-left p-3">Öncelik</th>
+                                    <th pSortableColumn="priority" class="text-left p-3">Öncelik
+                                        <p-sortIcon field="priority" />
+
+                                    </th>
                                     <th class="text-left p-3">Kategori</th>
                                     <th class="text-left p-3 ">İşlem</th>
                                     <th class="text-left p-3 ">Detay</th>
@@ -137,7 +180,7 @@
                                             class="p-button-rounded p-button-danger p-button-text mr-2"
                                             (onClick)="confirmDelete(product.id)"></p-button>
                                         <p-dialog header="Silme Onayı" [visible]="deleteConfirmationVisible()"
-                                            (visibleChange)="deleteConfirmationVisible.set($event)" [modal]="true"
+                                            (visibleChange)="deleteConfirmationVisible.set($event)" [modal]="false"
                                             [style]="{width: '350px'}">
                                             <p>Bu Bildirimi silmek istediğinize emin misiniz?</p>
                                             <ng-template pTemplate="footer">
@@ -157,18 +200,18 @@
                         </p-table>
                     </div>
                 </div>
-                
+
             </div>
-            
+
         </div>
     </div>
-    <p-dialog header="Ürün Detayı" [(visible)]="productDialogVisible" [style]="{width: '50vw'}" [modal]="true"
+    <p-dialog header="Ürün Detayı" [(visible)]="productDialogVisible" [style]="{width: '50vw'}" [modal]="false"
         styleClass="p-fluid">
         <ng-container *ngIf="selectedProduct() as product">
             <div class="grid grid-cols-2 gap-5">
                 <div class="col-span-2">
                     <label class="font-bold ">Başlık:</label>
-                    <input  pInputText id="title"  type="text" [disabled]="true"  placeholder="{{product.title}}" formControlName="title"
+                    <input pInputText id="title" type="text" [disabled]="true" placeholder="{{product.title}}" 
                         class="w-full mt-1" />
                 </div>
                 <div class="col-span-2">
@@ -195,7 +238,7 @@
             </div>
         </ng-container>
     </p-dialog>
-    <p-dialog header="YENİ HATIRLATICI EKLE" [(visible)]="visible" [modal]="true"
+    <p-dialog header="YENİ HATIRLATICI EKLE" [(visible)]="visible" [modal]="false"
         [style]="{width: '40vw' ,height:'46vw'}" styleClass="p-fluid">
         <form [formGroup]="registerAddForm" (ngSubmit)="onSubmit()" class="space-y-4">
             <div class="field">
@@ -209,14 +252,28 @@
             </div>
             <div class="field">
                 <label for="date" class="font-bold">Hatırlatıcı Tarihi:</label>
-                <p-calendar id="date" formControlName="date" [showIcon]="true" dateFormat="dd.mm.yy" [minDate]="today"
-                    class="w-full mt-1"></p-calendar>
-            </div>
-
-            <div class="field">
+                <p-calendar 
+                  id="date" 
+                  formControlName="date" 
+                  [showIcon]="true" 
+                  dateFormat="dd.mm.yy"
+                  [minDate]="today"
+                  (onSelect)="onDateSelect($event)"
+                  class="w-full mt-1">
+                </p-calendar>
+              </div>
+              
+              <div class="field">
                 <label for="time" class="font-bold">Hatırlatıcı Saati:</label>
-                <p-calendar formControlName="time" [timeOnly]="true" [showIcon]="true" class="w-full mt-1"></p-calendar>
-            </div>
+                <p-calendar 
+                  id="time"
+                  formControlName="time" 
+                  [timeOnly]="true" 
+                  [showIcon]="true"
+                  [minDate]="minTime"
+                  class="w-full mt-1">
+                </p-calendar>
+              </div>
             <div class="field">
                 <label for="priority" class="font-bold">Öncelik Durumu:</label>
                 <p-dropdown formControlName="priority" [options]="priority()" optionLabel="name" optionValue="name"
@@ -234,43 +291,41 @@
         </form>
     </p-dialog>
     <p-dialog header="HATIRLATICI GÜNCELLE" [visible]="updateDialogVisible()"
-                    (visibleChange)="updateDialogVisible.set($event)" [modal]="true"
-                    [style]="{width: '40vw', height:'46vw'}" styleClass="p-fluid">
-                    <form [formGroup]="updateForm" (ngSubmit)="onUpdate()" class="space-y-4">
-                        <div class="field">
-                            <label for="title" class="font-bold">Hatırlatıcı Başlığı:</label>
-                            <input pInputText id="title" formControlName="title" class="w-full mt-1" />
-                        </div>
-                        <div class="field">
-                            <label for="message" class="font-bold">Hatırlatıcı Mesajı:</label>
-                            <textarea pInputTextarea id="message" formControlName="message" rows="5"
-                                class="w-full h-40 mt-1"></textarea>
-                        </div>
-                        <div class="field">
-                            <label for="date" class="font-bold">Hatırlatıcı Tarihi:</label>
-                            <p-calendar id="date" formControlName="date" [showIcon]="true" dateFormat="dd.mm.yy"
-                                [minDate]="today" class="w-full mt-1" ></p-calendar>
-                        </div>
-                        <div class="field">
-                            <label for="time" class="font-bold">Hatırlatıcı Saati:</label>
-                            <p-calendar formControlName="time" [timeOnly]="true" [showIcon]="true"
-                                class="w-full mt-1"></p-calendar>
-                        </div>
-                        <div class="field">
-                            <label for="priority" class="font-bold">Öncelik Durumu:</label>
-                            <p-dropdown formControlName="priority" [options]="priority()" optionLabel="name"
-                                optionValue="name" placeholder="Öncelik Durumunu Seçiniz"
-                                class="w-full mt-1"></p-dropdown>
-                        </div>
-                        <div class="field">
-                            <label for="category" class="font-bold">Kategori:</label>
-                            <p-dropdown formControlName="category" [options]="category()" optionLabel="name"
-                                optionValue="name" placeholder="Kategori Seçiniz" class="w-full mt-1"></p-dropdown>
-                        </div>
-                        <div class="flex justify-end space-x-2 mt-4">
-                            <button pButton label="İptal" type="button" class="p-button-danger"
-                                (click)="updateDialogVisible.set(false)"></button>
-                            <button pButton label="Güncelle" type="submit" class="p-button-success"></button>
-                        </div>
-                    </form>
-                </p-dialog>
+        (visibleChange)="updateDialogVisible.set($event)" [modal]="false" [style]="{width: '40vw', height:'46vw'}"
+        styleClass="p-fluid">
+        <form [formGroup]="updateForm" (ngSubmit)="onUpdate()" class="space-y-4">
+            <div class="field">
+                <label for="title" class="font-bold">Hatırlatıcı Başlığı:</label>
+                <input pInputText id="title" formControlName="title" class="w-full mt-1" />
+            </div>
+            <div class="field">
+                <label for="message" class="font-bold">Hatırlatıcı Mesajı:</label>
+                <textarea pInputTextarea id="message" formControlName="message" rows="5"
+                    class="w-full h-40 mt-1"></textarea>
+            </div>
+            <div class="field">
+                <label for="date" class="font-bold">Hatırlatıcı Tarihi:</label>
+                <p-calendar id="date" formControlName="date" [showIcon]="true" dateFormat="dd.mm.yy" [minDate]="today"
+                    class="w-full mt-1"></p-calendar>
+            </div>
+            <div class="field">
+                <label for="time" class="font-bold">Hatırlatıcı Saati:</label>
+                <p-calendar formControlName="time" [timeOnly]="true" [showIcon]="true" class="w-full mt-1"></p-calendar>
+            </div>
+            <div class="field">
+                <label for="priority" class="font-bold">Öncelik Durumu:</label>
+                <p-dropdown formControlName="priority" [options]="priority()" optionLabel="name" optionValue="name"
+                    placeholder="Öncelik Durumunu Seçiniz" class="w-full mt-1"></p-dropdown>
+            </div>
+            <div class="field">
+                <label for="category" class="font-bold">Kategori:</label>
+                <p-dropdown formControlName="category" [options]="category()" optionLabel="name" optionValue="name"
+                    placeholder="Kategori Seçiniz" class="w-full mt-1"></p-dropdown>
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button pButton label="İptal" type="button" class="p-button-danger"
+                    (click)="updateDialogVisible.set(false)"></button>
+                <button pButton label="Güncelle" type="submit" class="p-button-success"></button>
+            </div>
+        </form>
+    </p-dialog>

@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { DragDropModule } from 'primeng/dragdrop';
 import { TagModule } from 'primeng/tag';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -54,12 +54,29 @@ export class LayoutComponent implements OnInit {
   updateDialogVisible = signal(false);
   selectedProductForUpdate = signal<Product | null>(null);
 
+  searchValue: string = '';
+
+  minTime: Date = new Date(); // Sadece bunu ekleyin
+
+  
   todoItems: any;
   closeDialog() {
     throw new Error('Method not implemented.');
   }
   productService = inject(ProductService);
   fb = inject(FormBuilder);
+
+  convertTurkishToLower(text: string): string {
+    return text
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'ı')
+      .replace(/Ğ/g, 'ğ')
+      .replace(/Ü/g, 'ü')
+      .replace(/Ş/g, 'ş')
+      .replace(/Ö/g, 'ö')
+      .replace(/Ç/g, 'ç')
+      .toLowerCase();
+  }
 
   updateForm = this.fb.group({
     title: ['', Validators.required],
@@ -96,7 +113,7 @@ export class LayoutComponent implements OnInit {
     { name: 'İş' },
     { name: 'Sağlık' },
     { name: 'Kişisel' },
-    { name: 'Alışveriş' },
+    { name: 'Alişveriş' },
   ]);
 
   registerAddForm = this.fb.group({
@@ -108,10 +125,46 @@ export class LayoutComponent implements OnInit {
     category: ['', Validators.required],
   });
 
+
+  
   constructor() {}
 
+ 
   updateTodoCount() {
     this.todoCount.set(this.tempList().length);
+  }
+
+  onDateSelect(event: Date) {
+    const selectedDate = new Date(event);
+    const currentDate = new Date();
+    
+    if (selectedDate.toDateString() === currentDate.toDateString()) {
+      this.minTime = currentDate;
+      
+      const currentTime = this.registerAddForm.get('time')?.value;
+      if (currentTime && new Date(currentTime).getTime() < currentDate.getTime()) {
+        this.registerAddForm.get('time')?.setValue(null);
+      }
+    } else {
+      this.minTime = new Date(selectedDate.setHours(0, 0, 0, 0));
+    }
+  }
+
+
+  onUpdateDateSelect(event: Date) {
+    const selectedDate = new Date(event);
+    const currentDate = new Date();
+    
+    if (selectedDate.toDateString() === currentDate.toDateString()) {
+      this.minTime = currentDate;
+      
+      const currentTime = this.updateForm.get('time')?.value;
+      if (currentTime && new Date(currentTime).getTime() < currentDate.getTime()) {
+        this.updateForm.get('time')?.setValue(null);
+      }
+    } else {
+      this.minTime = new Date(selectedDate.setHours(0, 0, 0, 0));
+    }
   }
 
   ngOnInit() {
@@ -139,6 +192,8 @@ export class LayoutComponent implements OnInit {
       },
     ];
     this.updateTodoCount();
+    this.today = new Date(); // Mevcut today değişkenini kullanın
+
   }
 
   // Drag işlemi başlatıldığında
@@ -330,7 +385,7 @@ export class LayoutComponent implements OnInit {
 
     // Parse the full date-time string into a Date object
     const fullDateTime = new Date(product.time);
-    
+
     // Extract hours and minutes from the Date object
     const timeAsDate = new Date(); // Create a new Date for the current day
     timeAsDate.setHours(fullDateTime.getHours()); // Set hours from the product time
@@ -347,9 +402,7 @@ export class LayoutComponent implements OnInit {
     });
 
     this.updateDialogVisible.set(true);
-}
-
-
+  }
 
   //Güncelleme işlemleri
   onUpdate() {
@@ -362,14 +415,10 @@ export class LayoutComponent implements OnInit {
         date: formValue.date
           ? new Date(formValue.date).toLocaleDateString()
           : '',
-          time: formValue.time ? String(formValue.time) : ''
-,      
+        time: formValue.time ? String(formValue.time) : '',
         priority: formValue.priority || '',
         category: formValue.category || '',
       };
-
-
-
 
       this.updateProductInLists(updatedProduct);
       this.updateLocalStorage(updatedProduct);
@@ -402,12 +451,39 @@ export class LayoutComponent implements OnInit {
     this.selectedProduct.set(product);
     this.productDialogVisible.set(true);
   }
-
   // Benzersiz ID oluşturma fonksiyonu
   generateId() {
     return '_' + Math.random().toString(36).substr(2, 9);
   }
   showTodoDialog() {
     this.todoDialogVisible.set(true);
+  }
+
+  onGlobalFilter(table: Table, event: Event) {
+    const searchTerm = (event.target as HTMLInputElement).value;
+
+    if (!searchTerm) {
+      table.filteredValue = null;
+      return;
+    }
+
+    const matchFunction = (item: any): boolean => {
+      const filterValue = this.convertTurkishToLower(searchTerm);
+
+      return Object.keys(item).some((key) => {
+        const value = item[key];
+        if (value === null || value === undefined) return false;
+
+        const itemValue = this.convertTurkishToLower(String(value));
+        return itemValue.includes(filterValue);
+      });
+    };
+
+    table.filteredValue = this.tempList().filter(matchFunction);
+  }
+  clear(table: Table) {
+    this.searchValue = '';
+    table.clear();
+    table.filteredValue = null;
   }
 }
